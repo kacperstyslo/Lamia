@@ -9,6 +9,7 @@ import platform
 import socket
 import getpass
 import subprocess
+import requests
 import random
 from threading import Thread
 from itertools import product
@@ -25,15 +26,6 @@ class Clear:
         clear = lambda: os.system('clear')
 
 
-class Close:
-    @staticmethod
-    def close():
-        if os.name == 'nt':
-            os.startfile(__file__)
-            os.system("taskkill /f /im  cmd.exe")
-            sys.exit(0)
-
-
 reqs = subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'])
 installed_packages = [r.decode().split('==')[0] for r in reqs.split()]
 missing = False
@@ -45,43 +37,35 @@ if ('getmac' or 'pythonping' or 'paramiko') not in installed_packages:
     missing = True
     print('Missing required package! Lamia will install the missing packages automatically\nWait...')
 
-if os.name != 'nt':
-    import requests
-
 try:
     from pythonping import ping
 except (NameError, ModuleNotFoundError):
-    subprocess.call('pip install pythonping', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    subprocess.call('pip install pythonping', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) if os.name == 'nt' else subprocess.call('pip3 install pythonping', shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 try:
     import getmac
 except (ImportError, ModuleNotFoundError):
-    subprocess.call('pip install getmac', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    subprocess.call('pip install getmac', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) if os.name == 'nt' else subprocess.call('pip3 install getmac', shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 try:
     import paramiko
 except (ImportError, ModuleNotFoundError):
-    subprocess.call('pip install paramiko', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-
+    subprocess.call('pip install paramiko', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) if os.name == 'nt' else subprocess.call('pip3 install paramiko', shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 try:
     from colorama import init
 except (ImportError, ModuleNotFoundError):
-    subprocess.call('pip install colorama', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    subprocess.call('pip install colorama', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) if os.name == 'nt' else subprocess.call('pip3 install colorama', shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 try:
     from termcolor import cprint
+    from termcolor import colored
 except (ImportError, ModuleNotFoundError):
-    subprocess.call('pip install termcolor', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    subprocess.call('pip install termcolor', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) if os.name == 'nt' else subprocess.call('pip3 install termcolor', shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 try:
     from pyfiglet import figlet_format
 except (ImportError, ModuleNotFoundError):
-    subprocess.call('pip install pyfiglet', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-
-from colorama import init
-from termcolor import cprint
-from termcolor import colored
-from pyfiglet import figlet_format
+    subprocess.call('pip install pyfiglet', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) if os.name == 'nt' else subprocess.call('pip3 install pyfiglet', shell=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
 if os.name == 'nt':
     try:
@@ -105,8 +89,8 @@ if os.name == 'nt':
     except (ImportError, ModuleNotFoundError):
         subprocess.call('pip install maxminddb-geolite2', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
-if missing is True:
-    Close.close()
+if missing:
+    os.execv(sys.executable, ['python3'] + [os.path.basename(__file__)]) if os.name != 'nt' else os.execv(sys.executable, ['python'] + [sys.argv[0]])
 
 
 class Lamia:
@@ -142,7 +126,7 @@ class WelcomeMessage:
 
     def __init__(self):
         self.load: str = f''
-        self.start_up_message: str = figlet_format("Lamia   2 . 2")
+        self.start_up_message: str = figlet_format("Lamia   2 . 3")
         self.check_compatibility: str = "The script checks compatibility..."
 
     def lamia_load_screen(self):
@@ -255,7 +239,7 @@ class MainMenu:
 
     def menu(self):
         Clear.clear()
-        print(25 * '-' + f'{Bcolors.Magenta}LAMIA VERSION 2.2{Bcolors.ENDC}' + 25 * '-')
+        print(25 * '-' + f'{Bcolors.Magenta}LAMIA VERSION 2.3{Bcolors.ENDC}' + 25 * '-')
         time.sleep(0.25)
         print(f'{Bcolors.WARNING}1.NETWORK SCANNER{Bcolors.ENDC}')
         time.sleep(0.25)
@@ -2497,10 +2481,16 @@ class SSH:
                     elif command_shh_connected == '0':
                         if client:
                             client.close()
-                            input(f"\n{Bcolors.WARNING}Disconnecting ...{Bcolors.ENDC} \nPress any key to continue ...")
+                            input(f"\n{Bcolors.WARNING}Disconnecting ...{Bcolors.ENDC}\nPress any key to continue ...")
                             MainMenu().menu()
+
         except socket.gaierror:
-            print(f'{Bcolors.Error}Wrong Data!{Bcolors.ENDC} Do you want to connect again one again? {Bcolors.WARNING}y/n{Bcolors.ENDC}')
+            print(f"{Bcolors.Error}Can't find host!{Bcolors.ENDC}\nDo you want to try to connect to a different host?{Bcolors.WARNING} y/n{Bcolors.ENDC}")
+            print(70 * '-')
+            ssh_again = input('> ')
+            SSH().ssh_command() if ssh_again.upper() == 'Y' else MainMenu().menu()
+        except paramiko.ssh_exception.AuthenticationException:
+            print(f"{Bcolors.Error}Wrong credentials!{Bcolors.ENDC}\nDo you want to try to connect again?{Bcolors.WARNING} y/n{Bcolors.ENDC}")
             print(70 * '-')
             ssh_again = input('> ')
             SSH().ssh_command() if ssh_again.upper() == 'Y' else MainMenu().menu()
@@ -2819,6 +2809,5 @@ if __name__ == '__main__':
         print('One module not found. Lamia will install that module automatically...')
         if os.name == 'nt':
             subprocess.call('pip install elevate', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-            Close.close()
 
-# VERSION 2.2
+# VERSION 2.3

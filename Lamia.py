@@ -127,7 +127,7 @@ class WelcomeMessage:
 
     def __init__(self):
         self.load: str = f''
-        self.start_up_message: str = figlet_format("Lamia   2 . 3")
+        self.start_up_message: str = figlet_format("Lamia   2 . 4")
         self.check_compatibility: str = "The script checks compatibility..."
 
     def lamia_load_screen(self):

